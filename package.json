@@ -1,0 +1,22 @@
+{
+  "name": "humble-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@playwright/test": "^1.13.1",
+    "axios": "^0.21.1",
+    "express": "^4.17.1",
+    "lodash": "^4.17.21",
+    "node-cron": "^3.0.0",
+    "playwright": "^1.13.1",
+    "sqlite": "^4.0.23",
+    "sqlite3": "^5.0.2"
+  }
+}
