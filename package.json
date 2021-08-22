@@ -16,7 +16,6 @@
     "lodash": "^4.17.21",
     "node-cron": "^3.0.0",
     "playwright": "^1.13.1",
-    "sqlite": "^4.0.23",
-    "sqlite3": "^5.0.2"
+    "winston": "^3.3.3"
   }
 }

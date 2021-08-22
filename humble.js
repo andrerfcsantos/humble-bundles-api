@@ -140,52 +140,51 @@ async function process_bundles(context, bundles) {
 }
 
 export async function fetch_bundles() {
+
   const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
 
-  const bundles_page = await context.newPage();
+  try {
+    const context = await browser.newContext();
+    const bundles_page = await context.newPage();
+    await bundles_page.goto(BUNDLES_URL, { waitUntil: "load" });
 
-  await bundles_page.goto(BUNDLES_URL, { waitUntil: "load" });
+    let category_elems = await bundles_page.$$(".landing-mosaic-section > h3");
+    let categories = [];
 
-  let category_elems = await bundles_page.$$(".landing-mosaic-section > h3");
-  let categories = [];
-
-  for (let elem of category_elems) {
-    categories.push((await elem.innerText()).toLowerCase());
-  }
-
-  let category_bundles = {};
-  for (let category of categories) {
-    let info_sections = await bundles_page.$$(
-      `h3:has-text('${category}') + section .info-section`
-    );
-    category_bundles[category] = [];
-    for (let info_section of info_sections) {
-      let url = await info_section.getAttribute("href");
-      url = `${"https://www.humblebundle.com"}${url.split("?")[0]}`;
-
-      let name_elem = await info_section.$(".name");
-      let name = toTitleCase(await name_elem.innerText());
-      category_bundles[category].push({ url, name });
+    for (let elem of category_elems) {
+      categories.push((await elem.innerText()).toLowerCase());
     }
+
+    let category_bundles = {};
+    for (let category of categories) {
+      let info_sections = await bundles_page.$$(
+        `h3:has-text('${category}') + section .info-section`
+      );
+      category_bundles[category] = [];
+      for (let info_section of info_sections) {
+        let url = await info_section.getAttribute("href");
+        url = `${"https://www.humblebundle.com"}${url.split("?")[0]}`;
+
+        let name_elem = await info_section.$(".name");
+        let name = toTitleCase(await name_elem.innerText());
+        category_bundles[category].push({ url, name });
+      }
+    }
+
+    let cat_promises = Object.keys(category_bundles).map((cat) => process_bundles(context, category_bundles[cat]));
+    let infos = await Promise.all(cat_promises);
+
+    let bundle_infos = {};
+    _.zip(Object.keys(category_bundles), infos).forEach(([cat_name, bundles]) => {
+      bundle_infos[cat_name] = bundles;
+    });
+    await browser.close();
+    return { lastUpdated: Date.now().toString(), bundles: bundle_infos };
+  } catch (e) {
+    await browser.close();
+    throw e
   }
 
-  let cat_promises = [];
-  for (let category_bundle in category_bundles) {
-    cat_promises.push(
-      process_bundles(context, category_bundles[category_bundle])
-    );
-  }
-
-  let infos = await Promise.all(cat_promises);
-
-  let bundle_infos = {};
-  _.zip(Object.keys(category_bundles), infos).forEach(([cat_name, bundles]) => {
-    bundle_infos[cat_name] = bundles;
-  });
-  await browser.close();
-
-  return { lastUpdated: Date.now().toString(), bundles: bundle_infos };
 }
 
 export default {
