@@ -39,6 +39,15 @@ async function get_bundle_metadata(page) {
   let value_match = value_regex.exec(value_text);
   let value = value_match ? value_match[1] : NaN;
 
+  let expire_time_elem = await page.$(".pwyw-view .countdown-container .js-countdown");
+  let expire_time_text = (await expire_time_elem.innerText()).trim();
+  const expire_time_regex = /Offer ends in( \d* days :)?( \d{1,2} hours :)? (\d{1,2}) minutes/gm;
+  let expire_time_match = expire_time_regex.exec(expire_time_text);
+  let minutes = Number.parseInt(expire_time_match[3]) | 0;
+  let hours = Number.parseInt(expire_time_match[2]) | 0;
+  let days = Number.parseInt(expire_time_match[1]) | 0;
+  let expire_in = {days, hours, minutes};
+
   return {
     logo_url,
     logo_alt,
@@ -47,6 +56,7 @@ async function get_bundle_metadata(page) {
     facts,
     raised,
     value,
+    expire_in,
   };
 }
 
