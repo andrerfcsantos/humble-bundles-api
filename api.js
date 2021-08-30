@@ -2,6 +2,8 @@ import express from "express";
 import humble from "./humble.js";
 import cron from "node-cron";
 import winston from "winston";
+import dayjs from "dayjs";
+import dayjsPluginUTC from "dayjs/plugin/utc.js";
 
 const logger_formatter = winston.format.combine(
   winston.format.simple(),
@@ -40,6 +42,7 @@ async function updateBundle() {
   }
 }
 
+dayjs.extend(dayjsPluginUTC);
 cron.schedule("0,15,30,45 * * * *", updateBundle);
 
 const app = express();
