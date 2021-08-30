@@ -47,8 +47,11 @@ async function get_bundle_metadata(page) {
   let hours = Number.parseInt(expire_time_match[2]) | 0;
   let days = Number.parseInt(expire_time_match[1]) | 0;
   let expire_in = {days, hours, minutes};
-  let expire_time = new Date(70, 0, days+1, hours+1, minutes+1).getTime();
-  let expire_at = new Date(expire_time + Date.now());
+  let json_elem = await page.$("script[type='application/ld+json']");
+  let json_txt = (await json_elem.innerText()).trim();
+  let cleanJSON = json_txt.replace(/,\s+\"url\": \"\/\" \+ basic_data\.page_url/gm, "")
+  let info = JSON.parse(cleanJSON)
+  let expire_at = info.offers.availabilityEnds;
 
   return {
     logo_url,
@@ -59,7 +62,7 @@ async function get_bundle_metadata(page) {
     raised,
     value,
     expire_in,
-    expire_at
+    expire_at,
   };
 }
 
