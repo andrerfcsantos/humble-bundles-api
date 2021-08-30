@@ -1,5 +1,6 @@
 import { chromium } from "playwright";
 import _ from "lodash";
+import dayjs from "dayjs";
 
 const BASE_URL = "https://www.humblebundle.com";
 const BUNDLES_URL = `${BASE_URL}/bundles`;
@@ -39,30 +40,21 @@ async function get_bundle_metadata(page) {
   let value_match = value_regex.exec(value_text);
   let value = value_match ? value_match[1] : NaN;
 
-  let expire_time_elem = await page.$(".pwyw-view .countdown-container .js-countdown");
-  let expire_time_text = (await expire_time_elem.innerText()).trim();
-  const expire_time_regex = /Offer ends in( \d* days :)?( \d{1,2} hours :)? (\d{1,2}) minutes/gm;
-  let expire_time_match = expire_time_regex.exec(expire_time_text);
-  let minutes = Number.parseInt(expire_time_match[3]) | 0;
-  let hours = Number.parseInt(expire_time_match[2]) | 0;
-  let days = Number.parseInt(expire_time_match[1]) | 0;
-  let expire_in = {days, hours, minutes};
   let json_elem = await page.$("script[type='application/ld+json']");
   let json_txt = (await json_elem.innerText()).trim();
-  let cleanJSON = json_txt.replace(/,\s+\"url\": \"\/\" \+ basic_data\.page_url/gm, "")
-  let info = JSON.parse(cleanJSON)
-  let expire_at = info.offers.availabilityEnds;
+  let cleanJSON = json_txt.replace(/,\s+\"url\": \"\/\" \+ basic_data\.page_url/gm,"");
+  let info = JSON.parse(cleanJSON);
+  let ends_at = info.offers.availabilityEnds + "Z";
 
   return {
     logo_url,
     logo_alt,
     headline,
     description,
-    facts,
     raised,
     value,
-    expire_in,
-    expire_at,
+    facts,
+    ends_at,
   };
 }
 
@@ -148,7 +140,7 @@ async function process_bundle(context, bundle) {
   let metadata = await get_bundle_metadata(page);
 
   await page.close();
-  return { ...bundle, tiers, ...metadata };
+  return { ...bundle, ...metadata, tiers };
 }
 
 async function process_bundles(context, bundles) {
@@ -195,7 +187,7 @@ export async function fetch_bundles() {
       bundle_infos[cat_name] = bundles;
     });
     await browser.close();
-    return { lastUpdated: Date.now().toString(), bundles: bundle_infos };
+    return { lastUpdated: dayjs.utc().format(), bundles: bundle_infos };
   } catch (e) {
     await browser.close();
     throw e
