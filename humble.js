@@ -47,6 +47,8 @@ async function get_bundle_metadata(page) {
   let hours = Number.parseInt(expire_time_match[2]) | 0;
   let days = Number.parseInt(expire_time_match[1]) | 0;
   let expire_in = {days, hours, minutes};
+  let expire_time = new Date(70, 0, days+1, hours+1, minutes+1).getTime();
+  let expire_at = new Date(expire_time + Date.now());
 
   return {
     logo_url,
@@ -57,6 +59,7 @@ async function get_bundle_metadata(page) {
     raised,
     value,
     expire_in,
+    expire_at
   };
 }
 
