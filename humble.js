@@ -42,7 +42,10 @@ async function get_bundle_metadata(page) {
 
   let json_elem = await page.$("script[type='application/ld+json']");
   let json_txt = (await json_elem.innerText()).trim();
-  let cleanJSON = json_txt.replace(/,\s+\"url\": \"\/\" \+ basic_data\.page_url/gm,"");
+  let cleanJSON = json_txt.replace(
+    /,\s+\"url\": \"\/\" \+ basic_data\.page_url/gm,
+    ""
+  );
   let info = JSON.parse(cleanJSON);
   let ends_at = info.offers.availabilityEnds + "Z";
 
@@ -148,7 +151,6 @@ async function process_bundles(context, bundles) {
 }
 
 export async function fetch_bundles() {
-
   const browser = await chromium.launch({ headless: true });
 
   try {
@@ -179,20 +181,23 @@ export async function fetch_bundles() {
       }
     }
 
-    let cat_promises = Object.keys(category_bundles).map((cat) => process_bundles(context, category_bundles[cat]));
+    let cat_promises = Object.keys(category_bundles).map((cat) =>
+      process_bundles(context, category_bundles[cat])
+    );
     let infos = await Promise.all(cat_promises);
 
     let bundle_infos = {};
-    _.zip(Object.keys(category_bundles), infos).forEach(([cat_name, bundles]) => {
-      bundle_infos[cat_name] = bundles;
-    });
+    _.zip(Object.keys(category_bundles), infos).forEach(
+      ([cat_name, bundles]) => {
+        bundle_infos[cat_name] = bundles;
+      }
+    );
     await browser.close();
     return { lastUpdated: dayjs.utc().format(), bundles: bundle_infos };
   } catch (e) {
     await browser.close();
-    throw e
+    throw e;
   }
-
 }
 
 export default {
