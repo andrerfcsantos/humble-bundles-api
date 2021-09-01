@@ -49,7 +49,11 @@ async function get_bundle_metadata(page) {
   let info = JSON.parse(cleanJSON);
   let ends_at = info.offers.availabilityEnds + "Z";
 
+  let thumbnail_elem = await page.$("meta[name='twitter:image']");
+  let thumbnail_url = await thumbnail_elem.getAttribute("content");
+
   return {
+    thumbnail_url,
     logo_url,
     logo_alt,
     headline,
