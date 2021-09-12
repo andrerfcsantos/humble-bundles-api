@@ -74,6 +74,7 @@ async function get_page_items(page) {
 async function multi_tier_info(page, filters) {
   let tiers = [];
 
+  let previous_items = Infinity;
   for (let filter of filters) {
     let tier = {};
 
@@ -98,10 +99,13 @@ async function multi_tier_info(page, filters) {
     tier.price = header_match[2].trim();
 
     let items = await get_page_items(page);
-    while (items.length != tier.n_items) {
+
+    while (items.length >= previous_items) {
       await page.waitForTimeout(50);
       items = await get_page_items(page);
     }
+
+    previous_items = items.length;
 
     tier.items = items;
     tiers.push(tier);
@@ -130,11 +134,10 @@ async function single_tier_info(page) {
 
 async function process_bundle(context, bundle) {
   let page = await context.newPage();
-  await page.goto(bundle.url);
-  await page.waitForLoadState();
+  await page.goto(bundle.url, { waitUntil: "load" });
 
+  console.log(bundle.name);
   let filters = await page.$$(".tier-filters a");
-
   let tiers =
     filters.length > 0
       ? await multi_tier_info(page, filters)
